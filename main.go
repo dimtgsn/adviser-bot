@@ -2,19 +2,31 @@ package main
 
 import (
 	"flag"
-	"github.com/dmitry1721/adviser-bot.git/clients/telegram"
+	tgClient "github.com/dmitry1721/adviser-bot.git/clients/telegram"
+	"github.com/dmitry1721/adviser-bot.git/consumer/event-consumer"
+	"github.com/dmitry1721/adviser-bot.git/events/telegram"
+	"github.com/dmitry1721/adviser-bot.git/storage/files"
 	"log"
+)
+
+const (
+	storagePath = "storage"
+	batchSize   = 100
 )
 
 func main() {
 
-	tgClient = telegram.New(mustHost(), mustToken())
+	eventsProcessor := telegram.New(
+		tgClient.New(mustHost(), mustToken()),
+		files.New(storagePath),
+	)
 
-	// fetcher = fetcher.New()
+	log.Print("service started")
 
-	// processor = processor.New()
-
-	// consumer = consumer.Start(fetcher, processor)
+	consumer := event_consumer.New(eventsProcessor, eventsProcessor, batchSize)
+	if err := consumer.Start(); err != nil {
+		log.Fatal("service stopped", err)
+	}
 }
 
 func mustToken() string {
