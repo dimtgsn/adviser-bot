@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"context"
 	"errors"
 	"github.com/dmitry1721/adviser-bot.git/clients/telegram"
 	"github.com/dmitry1721/adviser-bot.git/lib/e"
@@ -20,7 +21,7 @@ func (p *Processor) doCmd(text string, chatID int, username string) error {
 
 	text = strings.TrimSpace(text)
 
-	log.Printf("got a new command '%s' fom '%s'", text, username)
+	log.Printf("got a new command '%s' from '%s'", text, username)
 
 	if isAddCmd(text) {
 		return p.savePage(chatID, text, username)
@@ -46,7 +47,7 @@ func (p *Processor) savePage(chatID int, pageURL string, username string) (err e
 		UserName: username,
 	}
 
-	isExists, err := p.storage.IsExists(page)
+	isExists, err := p.storage.IsExists(context.Background(), page)
 	if err != nil {
 		return err
 	}
@@ -58,7 +59,7 @@ func (p *Processor) savePage(chatID int, pageURL string, username string) (err e
 		//return p.tg.SendMessage(chatID, msgAlreadyExists)
 	}
 
-	if err := p.storage.Save(page); err != nil {
+	if err := p.storage.Save(context.Background(), page); err != nil {
 		return err
 	}
 
@@ -68,7 +69,7 @@ func (p *Processor) savePage(chatID int, pageURL string, username string) (err e
 func (p *Processor) sendRandom(chatID int, username string) (err error) {
 	defer func() { err = e.WrapIfErr("can't do command: send random", err) }()
 
-	page, err := p.storage.PickRandom(username)
+	page, err := p.storage.PickRandom(context.Background(), username)
 	if err != nil && !errors.Is(err, storage.ErrNoSavedPages) {
 		return err
 	}
@@ -83,7 +84,7 @@ func (p *Processor) sendRandom(chatID int, username string) (err error) {
 		return err
 	}
 
-	return p.storage.Remove(page)
+	return p.storage.Remove(context.Background(), page)
 }
 
 func (p *Processor) sendHelp(chatID int) (err error) {

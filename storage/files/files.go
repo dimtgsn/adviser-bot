@@ -58,6 +58,10 @@ func (s Storage) PickRandom(userName string) (page *storage.Page, err error) {
 
 	path := filepath.Join(s.basePath, userName)
 
+	if _, err := os.Stat(path); err != nil {
+		return nil, storage.ErrNoSavedPages
+	}
+
 	files, err := os.ReadDir(path)
 	if err != nil {
 		return nil, err
@@ -71,7 +75,7 @@ func (s Storage) PickRandom(userName string) (page *storage.Page, err error) {
 
 	file := files[n]
 
-	return s.decodePage(filepath.Join(s.basePath, file.Name()))
+	return s.decodePage(filepath.Join(path, file.Name()))
 
 }
 
